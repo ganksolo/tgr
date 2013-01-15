@@ -1,90 +1,34 @@
-var SearchInput = {
-
-    //options
-    settings : {
-        sForm : $('#J_searchForm'),
-        typeList :  $('#J_typeList'),
-        curType : $('#J_currentType'),
-        typeData : {
-            demand : 'demand',
-            supply : 'supply',
-            dict : 'dict',
-            news : 'news',
-            company : 'company'
+function weiboHandler(){
+    var wbID = document.getElementById('J_weibo');
+    if(!wbID) return;
+    /**
+     * [getWeiboData 获取weibo的数据]
+     * @return {[Object]} [defer(Deferred对象的实例)]
+     */
+    var getWeiboData = function(){
+        var defer = $.Deferred();
+        return $.getJSON('/news_weibo_ajax.php',{topic : 'weibo'},function(data){
+            defer.resolve(data);
+        })
+    };
+    /**
+     * [weibo 渲染微博的数据]
+     * @param  {[Object]} data [服务器响应的json数据]
+     */
+    var weibo = function(data){
+            var wb = $('#J_weibo');
+            $.each(data, function(i,n){ 
+                url = (n.home_page == undefined) ? n.source_url : n.home_page;
+            var li = $('<li><dl><dt><a href="'+ url +'" target="_blank" title="'+ n.user_name +'">'+ n.user_name +'</a><span>'+ n.publish_time +'</span></dt><dd>'+ n.content +'</dd></dl></li>');
+                li.appendTo(wb);
+            });
+    };
+    getWeiboData().then(
+        function(data){
+           renderAsyn.weibo(data); 
         },
-        searchFormAction : SEARCH_FORM_URLS,
-        host : host = location.protocol + '//' + location.host
-    },
-
-    /**
-     * [init shortcut and initialization method]
-     * @return {[type]} [description]
-     */
-    init : function(){
-        var s = this.settings;
-        this.setFormUrl(s);
-        this.displayLayer(s);
-    },
-    /**
-     * [setFormUrl 根据不同类型的栏目设置搜索表单的url]
-     * @param  {[obj]}  options [ 数据集合的对象 ]
-     */
-    setFormUrl : function(options){
-        var typeList = options.typeList,
-            typeData = options.typeData,
-            sForm = options.sForm;
-
-        typeList.on('click', 'a', function(e){
-            e.preventDefault();
-            var _this = $(this),
-                _thisText = _this.text(),
-                _thisType = _this.attr('data-type'),
-                _getCurText = currentVal.text(), 
-                _getCurType = currentVal.attr('data-type');
-
-            currentVal.text(_thisText).attr('data-type', _thisType);
-            _this.text( _getCurText).attr('data-type', _getCurType);
-
-            // 根据不同搜索类型，设置不同的action
-            switch(_thisType){
-                case typeData.supply :
-                    var val = searchFormAction.supply;
-                    sForm.attr('action', host + val);
-                    break;
-                case typeData.demand :
-                    var val = searchFormAction.demand;
-                    sForm.attr('action', host + val);
-                    break;
-                case typeData.company :
-                    var val = searchFormAction.company;
-                    sForm.attr('action', host + val);
-                    break;
-                case typeData.dict :
-                    var val = searchFormAction.dict;
-                    sForm.attr('action', host + val);
-                    break;
-                case typeData.news :
-                    var val = searchFormAction.news;
-                    sForm.attr('action', host + val);
-                    break;
-
-                default:
-                    alert("无法匹配到当前搜索类型！");
-            }
-            typeList.hide();
-        });
-    },
-    /**
-     * [displayLayer 搜索类型选择层的显示和影藏效果]
-     * @param  {[obj]}  options [ 数据集合的对象 ]
-     * @return {[type]}         [description]
-     */
-    displayLayer : function(options){
-        var curType = options.curType;
-        curType.hover(function(){
-            typeList.show();
-        }, function(){
-            typeList.hide();
-        });
-    }
-};
+        function(){
+            alert('微博数据异步请求延迟失败！');
+        }
+    ) 
+}
